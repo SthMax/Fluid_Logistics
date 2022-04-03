@@ -7,7 +7,7 @@ Fluid Logitics Project Codes
 1. Map Generator 
     Generating X*Y MAP with randomly numbered X*Y*P (P<1>) Blocks scattered into MAP
     Input:
-        Dimension: X,Y as INT
+        Dimension: X,Y as INT   
         Block Density: P as FLOAT
     *Tentative Input:*
         Scatter Function (Not Implemented)
