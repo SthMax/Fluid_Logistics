@@ -5,13 +5,14 @@ import numpy as np
 class mapGenerator:
 
     #initilization
-    def __init__(self, X: int, Y: int, N: int = 0, P:float = 0.1, Locales: List[str] = ["TRR"]) -> np.ndarray:
+    def __init__(self, X: int, Y: int, N: int = 1, P:float = 0.1, Locales: List[str] = ["TRR"]) -> np.ndarray:
         self.X = X
         self.Y = Y
         self.P = P
         self.N = N
         self.localeStr = Locales
         self.tileNumericLocales: List[Tuple[int,int]] = []
+        self.channelNumericLocales: List[Tuple[int,int]] = []
         self.map: np.ndarray
         self.mapGen()
 
@@ -23,24 +24,45 @@ class mapGenerator:
     #Default Tile Placement Random Generation Function, Generating Numbered Tiles
     def mapGen(self) -> None:
         self.map = np.zeros((self.Y,self.X), dtype=int)
-        poolSize = self.X*self.Y
-        dotPool = list(range(poolSize)) #Creating possible canditates for plates
+        tilePool = np.array(range(self.X*self.Y)) #Creating possible canditates for plates
 
         rng = np.random.default_rng() #random generator
 
         for i in range(int(self.X*self.Y*self.P)):
-            candidate = rng.integers(low = 0, high = poolSize)
-            candidate_locale = dotPool[candidate]
+            candidate = rng.integers(low = 0, high = len(tilePool))
+            candidate_locale = tilePool[candidate]
 
             self.map[candidate_locale % self.Y][candidate_locale // self.Y] = 1 + i
             self.tileNumericLocales.append((candidate_locale % self.Y, candidate_locale // self.Y)) 
 
-            del dotPool[candidate]
-            poolSize -= 1
+            tilePool = np.delete(tilePool, candidate)
 
-    def chanelGen(self) -> None:
-        
-        pass
+
+
+    def channelGen(self) -> None:
+        self.__addWallsToMap()
+        self.__strCmdToLocales()
+
+        htwp = np.array(range(self.X))
+        hdwp = htwp + ((self.Y - 1) * self.X)
+        vlwp = np.array(range(1, self.Y - 1)) * self.X
+        vrwp = vlwp + self.X - 1
+        channelPool = np.concatenate((htwp, hdwp, vlwp, vrwp))
+
+        rng = np.random.default_rng() #random generator
+
+        for i in range(self.N):
+            candidate = rng.integers(low = 0, high = len(channelPool))
+            candidate_locale = channelPool[candidate]
+
+            if self.map[candidate_locale % self.Y][candidate_locale // self.Y] == -3:
+                self.map[candidate_locale % self.Y][candidate_locale // self.Y] = -2 #set as outbound only
+                self.channelNumericLocales.append((candidate_locale % self.Y, candidate_locale // self.Y))
+            else:
+                pass
+
+            channelPool = np.delete(channelPool, candidate)
+
 
     def mapBatchify(self, B: int) -> None:
         pass
@@ -55,7 +77,12 @@ class mapGenerator:
     def getTileLocales(self) -> List[Tuple[int,int]]:
         return self.tileNumericLocales
 
-    def __strCmdToLocales(self, X:int, Y:int) -> None:
+    def getChannelLocales(self) -> List[Tuple[int,int]]:
+        return self.channelNumericLocales
+
+    def __strCmdToLocales(self) -> None:
+        X = self.X
+        Y = self.Y
         locationsMapping = {
             "TLT": (0,1),
             "TTT": (0, X // 2),
@@ -73,9 +100,18 @@ class mapGenerator:
         for i in self.localeStr:
             loc = locationsMapping.get(i)
             if loc != None:
-                self.map[loc[0]][loc[1]] = -2
+                self.map[loc[0]][loc[1]] = -2 #set as outbound only
+                self.N -= 1
             else:
                 pass
 
+    
+    def __addWallsToMap(self) -> None:
+        vertWall = np.zeros((self.Y,1), dtype = int) - 3
+        hrznWall = np.zeros((1,self.X + 2), dtype = int) -3
+        self.map = np.hstack((vertWall, np.hstack((self.map, vertWall))))
+        self.map = np.vstack((hrznWall, np.vstack((self.map, hrznWall))))
+        self.Y += 2
+        self.X += 2
 
 
