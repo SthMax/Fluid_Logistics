@@ -15,7 +15,7 @@ def EZ_BFS(mapGen: gen.mapGenerator) -> Tuple[bool, int]:
         cpyMap = np.copy(tileMap)
         (result, steps) = __EZ_BFS_ALGO(i,cpyMap)
         if result == False:
-            print(cpyMap)
+            #print(cpyMap)
             return (False, -1)
         else:
             allStep += (len(steps) - 1)
