@@ -1,4 +1,5 @@
 from multiprocessing import Pool, TimeoutError
+import time
 import multiprocessing
 from typing import List, Tuple
 from generator import mapGenerator
@@ -26,12 +27,16 @@ def paralleledRunner(X: int, Y: int, count: int, fnc: object, N = None, P = None
     workers = multiprocessing.cpu_count()
 
     if __name__ == '__main__':
+        print("paralleledRunner(X={},Y={},Count={},fnc={},N={},P={}) Starting".format(X,Y,count,fnc,N,P))
+        start = time.time()
         with Pool(processes=workers) as pool:
             multipleResults = [pool.apply_async(runner, (X,Y,fnc,N,P,Locales)) for i in range(count)]
             try:
-                resultList = [res.get(timeout = 1) for res in multipleResults]
+                resultList = [res.get() for res in multipleResults]
             except TimeoutError:
                 print("TIMEOUT ON RUNNER")
+        end = time.time()
+        print("Using {} seconds".format(end - start))
         return resultList
     
 def singleThreadRunner(X: int, Y: int, count: int, fnc: object, N = None, P = None, Locales = None) -> List[Tuple[bool, int]]:
