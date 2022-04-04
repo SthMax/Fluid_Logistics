@@ -13,8 +13,9 @@ class mapGenerator:
         self.localeStr = Locales
         self.tileNumericLocales: List[Tuple[int,int]] = []
         self.channelNumericLocales: List[Tuple[int,int]] = []
-        self.map: np.ndarray
-        self.mapGen()
+        self.map = np.zeros((self.Y,self.X), dtype=int)
+        self.channelGen()
+        #self.tileGen()
 
     #@overrides print as printing the map, using dataframe for visibility
     def __repr__(self) -> str:
@@ -22,14 +23,25 @@ class mapGenerator:
         return str(self.map)
 
     #Default Tile Placement Random Generation Function, Generating Numbered Tiles
-    def mapGen(self) -> None:
-        self.map = np.zeros((self.Y,self.X), dtype=int)
-        tilePool = np.array(range(self.X*self.Y)) #Creating possible canditates for plates
+    def tileGen(self) -> None:
+        self.tileNumericLocales = []
+        self.clearTiles()
+        
+        #excluding walls
+        tileX = self.X - 2
+        tileY = self.Y - 2
+
+        tilePool = np.array(range((tileX)*(tileY))) #Creating possible candidates for tiles
+
+        #move candidate location to center of map
+        for i in range(tilePool.size):
+            tilePool[i] = ((i // tileX) * 2 + 1) + self.X + i
+            
 
         rng = np.random.default_rng() #random generator
 
-        for i in range(int(self.X*self.Y*self.P)):
-            candidate = rng.integers(low = 0, high = len(tilePool))
+        for i in range(int(tileX*tileY*self.P)):
+            candidate = rng.integers(low = 0, high = tilePool.size)
             candidate_locale = tilePool[candidate]
 
             self.map[candidate_locale % self.Y][candidate_locale // self.Y] = 1 + i
@@ -40,6 +52,9 @@ class mapGenerator:
 
     #Generate Channel
     def channelGen(self) -> None:
+        self.channelNumericLocales = []
+        self.clearMap()
+
         self.__addWallsToMap()
         self.__strCmdToLocales()
 
@@ -51,7 +66,7 @@ class mapGenerator:
 
         rng = np.random.default_rng() #random generator
 
-        for i in range(self.N):
+        for i in range(self.N - len(self.localeStr)):
             candidate = rng.integers(low = 0, high = len(channelPool))
             candidate_locale = channelPool[candidate]
 
@@ -65,10 +80,10 @@ class mapGenerator:
 
     #Switch the numbering of tiles to multiple batches, IRREVERSIABLE
     def mapBatchify(self, B: int) -> None:
-        if B > 0:
-            for i in range(self.tileNumericLocales):
+        if (B > 0) & (B < (len(self.tileNumericLocales) / 2)) :
+            for i in range(len(self.tileNumericLocales)):
                 candidate_locale = self.tileNumericLocales[i]
-                self.map[candidate_locale[0]][candidate_locale[1]] = i // (len(self.tileNumericLocales) + 1 // B) + 1
+                self.map[candidate_locale[0]][candidate_locale[1]] = i // ((len(self.tileNumericLocales) + B) // B) + 1
 
 
     def getMap(self) -> np.ndarray:
@@ -83,6 +98,15 @@ class mapGenerator:
 
     def getChannelLocales(self) -> List[Tuple[int,int]]:
         return self.channelNumericLocales
+
+    def clearTiles(self):
+        for i in range(self.X):
+            for j in range(self.Y):
+                if self.map[i][j] > 0:
+                    self.map[i][j] = 0
+
+    def clearMap(self):
+        self.map = np.zeros((self.Y,self.X), dtype=int)
 
     def __strCmdToLocales(self) -> None:
         X = self.X
@@ -105,17 +129,26 @@ class mapGenerator:
             loc = locationsMapping.get(i)
             if loc != None:
                 self.map[loc[0]][loc[1]] = -2 #set as outbound only
-                self.N -= 1
+                self.channelNumericLocales.append(loc)
             else:
                 pass
 
-    
+
     def __addWallsToMap(self) -> None:
-        vertWall = np.zeros((self.Y,1), dtype = int) - 3
-        hrznWall = np.zeros((1,self.X + 2), dtype = int) -3
-        self.map = np.hstack((vertWall, np.hstack((self.map, vertWall))))
-        self.map = np.vstack((hrznWall, np.vstack((self.map, hrznWall))))
-        self.Y += 2
-        self.X += 2
+        for i in range(self.X):
+            self.map[0][i] = -3
+            self.map[self.Y - 1][i] = -3
+        for i in range(self.Y):
+            self.map[i][0] = -3
+            self.map[i][self.X - 1] = -3
+
+
+        # vertWall = np.zeros((self.Y,1), dtype = int) - 3
+        # hrznWall = np.zeros((1,self.X + 2), dtype = int) -3
+        # self.map = np.hstack((vertWall, np.hstack((self.map, vertWall))))
+        # self.map = np.vstack((hrznWall, np.vstack((self.map, hrznWall))))
+        # self.Y += 2
+        # self.X += 2
+        # self.tileNumericLocales = [(a+1, b+1) for (a,b) in self.tileNumericLocales]
 
 
