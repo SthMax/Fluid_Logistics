@@ -38,7 +38,7 @@ class mapGenerator:
             tilePool = np.delete(tilePool, candidate)
 
 
-
+    #Generate Channel
     def channelGen(self) -> None:
         self.__addWallsToMap()
         self.__strCmdToLocales()
@@ -63,9 +63,13 @@ class mapGenerator:
 
             channelPool = np.delete(channelPool, candidate)
 
-
+    #Switch the numbering of tiles to multiple batches, IRREVERSIABLE
     def mapBatchify(self, B: int) -> None:
-        pass
+        if B > 0:
+            for i in range(self.tileNumericLocales):
+                candidate_locale = self.tileNumericLocales[i]
+                self.map[candidate_locale[0]][candidate_locale[1]] = i // (len(self.tileNumericLocales) + 1 // B) + 1
+
 
     def getMap(self) -> np.ndarray:
         return self.map
