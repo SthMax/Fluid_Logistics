@@ -14,7 +14,7 @@ class mapGenerator:
         self.channelNumericLocales: List[Tuple[int,int]] = []
         self.map = np.zeros((self.Y,self.X), dtype=int)
         self.channelGen()
-        #self.tileGen()
+        self.tileGen()
 
     #@overrides print as printing the map, using dataframe for visibility
     def __repr__(self) -> str:
