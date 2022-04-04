@@ -3,7 +3,6 @@ from typing import List, Tuple
 import numpy as np
 
 class mapGenerator:
-
     #initilization
     def __init__(self, X: int, Y: int, N: int = 1, P:float = 0.1, Locales: List[str] = ["TRR"]) -> np.ndarray:
         self.X = X
