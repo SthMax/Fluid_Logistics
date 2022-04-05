@@ -27,7 +27,7 @@ def paralleledRunner(X: int, Y: int, count: int, fnc: object, N = None, P = None
     workers = multiprocessing.cpu_count()
 
     if __name__ == '__main__':
-        print("paralleledRunner(X={},Y={},Count={},fnc={},N={},P={}) Starting".format(X,Y,count,fnc,N,P))
+        print("paralleledRunner(X={},Y={},Loop={},fnc={},N={},P={}) Starting".format(X,Y,count,fnc,N,P))
         start = time.time()
         with Pool(processes=workers) as pool:
             multipleResults = [pool.apply_async(runner, (X,Y,fnc,N,P,Locales)) for i in range(count)]
