@@ -30,45 +30,45 @@ def EZ_BFS(mapGen: gen.mapGenerator) -> Tuple[bool, int]:
             
     return (True, allStep)
 
-def __EZ_BFS_ALGO(start: Tuple[int, int], map: np.ndarray) -> Tuple[bool, int]:
+def __EZ_BFS_ALGO(start: Tuple[int, int], tileMap: np.ndarray) -> Tuple[bool, int]:
     
     stepQueue = [(start, [])]
 
     while len(stepQueue) > 0:
         curNode, curPath = stepQueue.pop(0)
         curPath.append(curNode)
-        if map[curNode[0]][curNode[1]] == -2:
+        if tileMap[curNode[0]][curNode[1]] == -2:
             return (True, curPath)
-        if map[curNode[0]][curNode[1]] == -4:
+        if tileMap[curNode[0]][curNode[1]] == -4:
             pass
         else:
             # DEBUG & DISPLAY MODULE
             # sleep(0.5)
             # 
-            # for i in range(len(map)):
+            # for i in range(len(tileMap)):
             #     sys.stdout.write("\033[F") #back to previous line 
             #     sys.stdout.write("\033[K") #clear line 
 
-            map[curNode[0]][curNode[1]] = -4 #-4 as visited
-            # print(map)
+            tileMap[curNode[0]][curNode[1]] = -4 #-4 as visited
+            # print(tileMap)
         
 
-            avaliableAdjNodes = __EZ_BFS_GETNEIGHBORS(curNode, map)
+            avaliableAdjNodes = __EZ_BFS_GETNEIGHBORS(curNode, tileMap)
             for node in avaliableAdjNodes:
                 stepQueue.append((node, curPath[:]))
     
     return (False, None)
 
-def __EZ_BFS_GETNEIGHBORS(node: Tuple[int, int], map: np.ndarray) -> List[Tuple[int, int]]:
+def __EZ_BFS_GETNEIGHBORS(node: Tuple[int, int], tileMap: np.ndarray) -> List[Tuple[int, int]]:
     neighborList = []
     #append if either empty or ending
-    if map[node[0] - 1][node[1]] == 0 or map[node[0] - 1][node[1]] == -2:
+    if tileMap[node[0] - 1][node[1]] == 0 or tileMap[node[0] - 1][node[1]] == -2:
         neighborList.append((node[0] - 1, node[1]))
-    if map[node[0]][node[1] - 1] == 0 or map[node[0]][node[1] - 1] == -2:
+    if tileMap[node[0]][node[1] - 1] == 0 or tileMap[node[0]][node[1] - 1] == -2:
         neighborList.append((node[0], node[1] - 1))
-    if map[node[0] + 1][node[1]] == 0 or map[node[0] + 1][node[1]] == -2:
+    if tileMap[node[0] + 1][node[1]] == 0 or tileMap[node[0] + 1][node[1]] == -2:
         neighborList.append((node[0] + 1, node[1]))
-    if map[node[0]][node[1] + 1] == 0 or map[node[0]][node[1] + 1] == -2:
+    if tileMap[node[0]][node[1] + 1] == 0 or tileMap[node[0]][node[1] + 1] == -2:
         neighborList.append((node[0], node[1] + 1))
 
     return neighborList

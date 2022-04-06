@@ -12,14 +12,14 @@ class mapGenerator:
         self.localeStr = Locales
         self.tileNumericLocales: List[Tuple[int,int]] = []
         self.channelNumericLocales: List[Tuple[int,int]] = []
-        self.map = np.zeros((self.Y,self.X), dtype=int)
+        self.globalMap = np.zeros((self.Y,self.X), dtype=int)
         self.channelGen()
         self.tileGen()
 
-    #@overrides print as printing the map, using dataframe for visibility
+    #@overrides print as printing the globalMap, using dataframe for visibility
     def __repr__(self) -> str:
-        #return str(DataFrame(self.map, dtype=int))
-        return str(self.map)
+        #return str(DataFrame(self.globalMap, dtype=int))
+        return str(self.globalMap)
 
     #Default Tile Placement Random Generation Function, Generating Numbered Tiles
     def tileGen(self) -> None:
@@ -32,7 +32,7 @@ class mapGenerator:
 
         tilePool = np.array(range((tileX)*(tileY))) #Creating possible candidates for tiles
 
-        #move candidate location to center of map
+        #move candidate location to center of globalMap
         for i in range(tilePool.size):
             tilePool[i] = ((i // tileX) * 2 + 1) + self.X + i
             
@@ -43,7 +43,7 @@ class mapGenerator:
             candidate = rng.integers(low = 0, high = tilePool.size)
             candidate_locale = tilePool[candidate]
 
-            self.map[candidate_locale % self.Y][candidate_locale // self.Y] = 1 + i
+            self.globalMap[candidate_locale % self.Y][candidate_locale // self.Y] = 1 + i
             self.tileNumericLocales.append((candidate_locale % self.Y, candidate_locale // self.Y)) 
 
             tilePool = np.delete(tilePool, candidate)
@@ -69,8 +69,8 @@ class mapGenerator:
             candidate = rng.integers(low = 0, high = len(channelPool))
             candidate_locale = channelPool[candidate]
 
-            if self.map[candidate_locale % self.Y][candidate_locale // self.Y] == -3:
-                self.map[candidate_locale % self.Y][candidate_locale // self.Y] = -2 #set as outbound only
+            if self.globalMap[candidate_locale % self.Y][candidate_locale // self.Y] == -3:
+                self.globalMap[candidate_locale % self.Y][candidate_locale // self.Y] = -2 #set as outbound only
                 self.channelNumericLocales.append((candidate_locale % self.Y, candidate_locale // self.Y))
             else:
                 pass
@@ -82,15 +82,15 @@ class mapGenerator:
         if (B > 0) & (B < (len(self.tileNumericLocales) / 2)) :
             for i in range(len(self.tileNumericLocales)):
                 candidate_locale = self.tileNumericLocales[i]
-                self.map[candidate_locale[0]][candidate_locale[1]] = i // ((len(self.tileNumericLocales) + B) // B) + 1
+                self.globalMap[candidate_locale[0]][candidate_locale[1]] = i // ((len(self.tileNumericLocales) + B) // B) + 1
 
 
     def getMap(self) -> np.ndarray:
-        return self.map
+        return self.globalMap
 
     # Setter is disabled
     # def setMap(self, inputMap: np.ndarray) -> None:
-    #     self.map = inputMap
+    #     self.globalMap = inputMap
 
     def getTileLocales(self) -> List[Tuple[int,int]]:
         return self.tileNumericLocales
@@ -101,11 +101,11 @@ class mapGenerator:
     def clearTiles(self):
         for i in range(self.X):
             for j in range(self.Y):
-                if self.map[i][j] > 0:
-                    self.map[i][j] = 0
+                if self.globalMap[i][j] > 0:
+                    self.globalMap[i][j] = 0
 
     def clearMap(self):
-        self.map = np.zeros((self.Y,self.X), dtype=int)
+        self.globalMap = np.zeros((self.Y,self.X), dtype=int)
 
     def __strCmdToLocales(self) -> None:
         X = self.X
@@ -127,7 +127,7 @@ class mapGenerator:
         for i in self.localeStr:
             loc = locationsMapping.get(i)
             if loc != None:
-                self.map[loc[0]][loc[1]] = -2 #set as outbound only
+                self.globalMap[loc[0]][loc[1]] = -2 #set as outbound only
                 self.channelNumericLocales.append(loc)
             else:
                 pass
@@ -135,17 +135,17 @@ class mapGenerator:
 
     def __addWallsToMap(self) -> None:
         for i in range(self.X):
-            self.map[0][i] = -3
-            self.map[self.Y - 1][i] = -3
+            self.globalMap[0][i] = -3
+            self.globalMap[self.Y - 1][i] = -3
         for i in range(self.Y):
-            self.map[i][0] = -3
-            self.map[i][self.X - 1] = -3
+            self.globalMap[i][0] = -3
+            self.globalMap[i][self.X - 1] = -3
 
 
         # vertWall = np.zeros((self.Y,1), dtype = int) - 3
         # hrznWall = np.zeros((1,self.X + 2), dtype = int) -3
-        # self.map = np.hstack((vertWall, np.hstack((self.map, vertWall))))
-        # self.map = np.vstack((hrznWall, np.vstack((self.map, hrznWall))))
+        # self.globalMap = np.hstack((vertWall, np.hstack((self.globalMap, vertWall))))
+        # self.globalMap = np.vstack((hrznWall, np.vstack((self.globalMap, hrznWall))))
         # self.Y += 2
         # self.X += 2
         # self.tileNumericLocales = [(a+1, b+1) for (a,b) in self.tileNumericLocales]
