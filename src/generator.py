@@ -5,8 +5,8 @@ import numpy as np
 class mapGenerator:
     #initilization
     def __init__(self, X: int, Y: int, N: int = 1, P:float = 0.1, Locales: List[str] = ["TRR"]) -> np.ndarray:
-        self.X = X
-        self.Y = Y
+        self.X = X + 2
+        self.Y = Y + 2
         self.P = P
         self.N = N
         self.localeStr = Locales
@@ -57,7 +57,7 @@ class mapGenerator:
         self.__addWallsToMap()
         self.__strCmdToLocales()
 
-        htwp = np.array(range(self.X))
+        htwp = np.array(range(1, self.X - 1))
         hdwp = htwp + ((self.Y - 1) * self.X)
         vlwp = np.array(range(1, self.Y - 1)) * self.X
         vrwp = vlwp + self.X - 1
