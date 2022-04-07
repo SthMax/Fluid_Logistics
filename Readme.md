@@ -9,6 +9,7 @@ Fluid Logitics Project Codes\
 
     Input:\
     &emsp; Dimension: X,Y as INT\
+    &emsp; &emsp; &emsp; &emsp; X & Y is the size of horizontal and vertical size of tileMap, the total size of map will be (X+2), (Y+2)                
     &emsp; Block Density: P as FLOAT
 
     *Tentative Input:*\
