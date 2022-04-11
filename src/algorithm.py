@@ -1,8 +1,9 @@
+from logging import StringTemplateStyle
 from time import sleep
 from typing import List, Tuple
 import sys
 import numpy as np
-import generator as gen
+import src.generator as gen
 import math
 
 #USING SIMPLE GRID BFS, ASSUME THERE IS A PATH FROM A TILE TO any CHANNEL
@@ -79,3 +80,69 @@ def A_STAR_SORTING(mapGen: gen.mapGenerator) -> Tuple[bool,int]:
 
 # res = EZ_BFS(gen.mapGenerator(30,30,P=0.01))
 # print(res)
+
+def EMPTY_BLOCK_MOVEMENT(mapGen: gen.mapGenerator, block: int) ->Tuple[bool,int]:
+    totalSteps = 0
+
+    tileMap = mapGen.getMap()
+    tileList = mapGen.getTileLocales()
+
+    tileX = mapGen.X - 2
+    tileY = mapGen.Y - 2
+
+    #transform tileList into 2d array
+    emptyTileList = [[tileList[j*mapGen.C + i] for i in range(mapGen.C)] for j in range(tileY)]
+
+    rng = np.random.default_rng() #random generator
+
+    idx = 0
+
+    while idx < block:
+        blockY = rng.integers(low = 1, high=tileY, endpoint=True)
+        blockX = rng.integers(low = 1, high=tileX, endpoint=True)
+
+        if (tileMap[blockY][blockX] == 1): #there is a block on (block Y, block X)
+            #print ("CHOOSED", (blockY, blockX))
+            steps = 0
+
+            for i in range(blockY - 1, 0, -1):
+                closetEmptyBlockLocale = __MIN_HORIZONTAL_DISTANCE(emptyTileList[i - 1], blockX)
+                (CEBY,CEBX) = emptyTileList[i - 1][closetEmptyBlockLocale]
+
+                #print ("MOVING", (CEBY, CEBX))
+                
+                if (CEBX != blockX):
+                    steps += abs(CEBX - blockX)
+
+                    tileMap[CEBY][CEBX] = 1
+                    tileMap[CEBY][blockX] = 0
+
+                    #print ("TO", (CEBY, blockX))
+                    emptyTileList[i - 1][closetEmptyBlockLocale] = (CEBY,blockX)
+
+                # print(tileMap)
+                # sleep(1)
+                # for i in range(len(tileMap)):
+                #     sys.stdout.write("\033[F") #back to previous line 
+                #     sys.stdout.write("\033[K") #clear line 
+                steps += 1
+
+            tileMap[blockY][blockX] = 0          
+            emptyTileList[blockY - 1].append((blockY,blockX))
+            totalSteps += steps
+            idx += 1
+        else:
+            pass
+    #print(tileMap)
+    return (True, totalSteps)
+
+
+def __MIN_HORIZONTAL_DISTANCE(rowList: List[Tuple[int,int]], fixed_X: int) -> int:
+    returnIdx = 0
+    for i in range(len(rowList)):
+        prevX = rowList[returnIdx][1]
+        X = rowList[i][1]
+        if (abs(X - fixed_X) <= abs(prevX - fixed_X)):
+            returnIdx = i
+
+    return returnIdx

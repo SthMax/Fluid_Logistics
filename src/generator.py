@@ -4,17 +4,23 @@ import numpy as np
 
 class mapGenerator:
     #initilization
-    def __init__(self, X: int, Y: int, N: int = 1, P:float = 0.1, Locales: List[str] = ["TRR"]) -> np.ndarray:
+    def __init__(self, X: int, Y: int, N: int = 0, C: int = 0, P:float = 0.1, Locales: List[str] = ["TRR"]) -> np.ndarray:
         self.X = X + 2
         self.Y = Y + 2
         self.P = P
         self.N = N
+        self.C = C
         self.localeStr = Locales
         self.tileNumericLocales: List[Tuple[int,int]] = []
         self.channelNumericLocales: List[Tuple[int,int]] = []
         self.globalMap = np.zeros((self.Y,self.X), dtype=int)
         self.channelGen()
-        self.tileGen()
+        if C == 0:
+            self.tileGen()
+        else:
+            self.tileGenLine()
+
+
 
     #@overrides print as printing the globalMap, using dataframe for visibility
     def __repr__(self) -> str:
@@ -48,6 +54,32 @@ class mapGenerator:
 
             tilePool = np.delete(tilePool, candidate)
 
+    #TileGen with specified lines, generating x empty blocks on each row.
+    #In this mode, self.tileNumericLocales is the empty blocks on each row.
+    def tileGenLine(self) -> None:
+        self.tileNumericLocales = []
+        self.clearTiles()
+
+        #excluding walls
+        tileX = self.X - 2
+        tileY = self.Y - 2
+
+        self.globalMap[1:(1 + tileX), 1:(1 + tileY)] = 1 #set all to block with priority 1
+
+        rng = np.random.default_rng() #random generator
+
+        for i in range(tileY):
+            candidatePool = np.array(range(tileX)) + 1
+
+            for j in range(self.C):
+                candidate = rng.integers(low = 0, high = len(candidatePool))
+                candidate_locale = candidatePool[candidate]
+
+                self.globalMap[i + 1][candidate_locale] = 0
+                self.tileNumericLocales.append((i + 1, candidate_locale))
+
+                candidatePool = np.delete(candidatePool, candidate)
+
 
     #Generate Channel
     def channelGen(self) -> None:
@@ -65,17 +97,24 @@ class mapGenerator:
 
         rng = np.random.default_rng() #random generator
 
-        for i in range(self.N - len(self.localeStr)):
+        for i in range(self.N):
             candidate = rng.integers(low = 0, high = len(channelPool))
             candidate_locale = channelPool[candidate]
 
-            if self.globalMap[candidate_locale % self.Y][candidate_locale // self.Y] == -3:
-                self.globalMap[candidate_locale % self.Y][candidate_locale // self.Y] = -2 #set as outbound only
-                self.channelNumericLocales.append((candidate_locale % self.Y, candidate_locale // self.Y))
-            else:
-                pass
+            while(self.globalMap[candidate_locale % self.Y][candidate_locale // self.Y] != -3):
+                if len(channelPool) != 0:
+                    channelPool = np.delete(channelPool, candidate)
+                    candidate = rng.integers(low = 0, high = len(channelPool))
+                    candidate_locale = channelPool[candidate]
+                else:
+                    return
+
+            self.globalMap[candidate_locale % self.Y][candidate_locale // self.Y] = -2 #set as outbound only
+            self.channelNumericLocales.append((candidate_locale % self.Y, candidate_locale // self.Y))
 
             channelPool = np.delete(channelPool, candidate)
+
+            
 
     #Switch the numbering of tiles to multiple batches, IRREVERSIABLE
     def mapBatchify(self, B: int) -> None:
@@ -99,8 +138,8 @@ class mapGenerator:
         return self.channelNumericLocales
 
     def clearTiles(self):
-        for i in range(self.X):
-            for j in range(self.Y):
+        for i in range(self.Y):
+            for j in range(self.X):
                 if self.globalMap[i][j] > 0:
                     self.globalMap[i][j] = 0
 
@@ -130,7 +169,23 @@ class mapGenerator:
                 self.globalMap[loc[0]][loc[1]] = -2 #set as outbound only
                 self.channelNumericLocales.append(loc)
             else:
-                pass
+                if i == "TOP":
+                    self.globalMap[0] = -2
+                    for i in range(X):
+                        self.channelNumericLocales.append((0, i))
+                if i == "BOT":
+                    self.globalMap[Y-1] = -2
+                    for i in range(X):
+                        self.channelNumericLocales.append((Y - 1, i))
+                if i == "LEF":
+                    self.globalMap[:, 0] = -2
+                    for i in range(Y):
+                        self.channelNumericLocales.append((i, 0))
+                if i == "RIG":
+                    self.globalMap[:, X-1] = -2
+                    for i in range(Y):
+                        self.channelNumericLocales.append((i, X-1))
+                    
 
 
     def __addWallsToMap(self) -> None:
